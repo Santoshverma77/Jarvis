@@ -1,0 +1,9 @@
+#!/bin/bash
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+cd "$DIR"
+PYTHON_BIN="python3"
+if [ -f "$DIR/env/bin/python3" ]; then
+    PYTHON_BIN="$DIR/env/bin/python3"
+fi
+PYTHONPATH="$DIR:$PYTHONPATH" "$PYTHON_BIN" jarviscli/__main__.py "$@"
+
