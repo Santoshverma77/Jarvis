@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const toastBanner = document.getElementById('toastBanner');
     const toastMessage = document.getElementById('toastMessage');
     const toastClose = document.getElementById('toastClose');
-    const ctx = audioOrbCanvas.getContext('2d');
+    const ctx = audioOrbCanvas ? audioOrbCanvas.getContext('2d') : null;
 
     // 3. AUDIO & SPEECH VARIABLES
     let audioCtx = null;
@@ -49,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Toast Banner Helper
     function showToast(msg, duration = 4000) {
+        if (!toastBanner || !toastMessage) return;
         toastMessage.textContent = msg;
         toastBanner.classList.remove('hidden');
         if (duration > 0) {
@@ -57,64 +58,69 @@ document.addEventListener('DOMContentLoaded', () => {
             }, duration);
         }
     }
-    toastClose.addEventListener('click', () => toastBanner.classList.add('hidden'));
+    if (toastClose) toastClose.addEventListener('click', () => toastBanner.classList.add('hidden'));
 
     // 4. CENTRAL STATE MACHINE TRANSITION ENGINE
     function setState(newState) {
         currentState = newState;
         body.className = `state-${newState.toLowerCase()}`;
-        statusBadge.setAttribute('data-state', newState);
+        if (statusBadge) statusBadge.setAttribute('data-state', newState);
 
         switch (newState) {
             case VoiceState.IDLE:
-                statusText.textContent = 'READY & IDLE';
-                subtitleText.textContent = '"Boliye master, main sun rahi hu..."';
-                micBtn.classList.remove('listening');
-                interruptBtn.classList.add('hidden');
+                if (statusText) statusText.textContent = 'READY & IDLE';
+                if (subtitleText) subtitleText.textContent = '"Boliye master, main sun rahi hu..."';
+                if (micBtn) micBtn.classList.remove('listening');
+                if (interruptBtn) interruptBtn.classList.add('hidden');
                 stopMicrophoneStream();
                 break;
 
             case VoiceState.LISTENING:
-                statusText.textContent = 'LISTENING TO YOUR VOICE...';
-                subtitleText.textContent = 'Aapki aawaz sun rahi hu...';
-                micBtn.classList.add('listening');
-                interruptBtn.classList.add('hidden');
+                if (statusText) statusText.textContent = 'LISTENING TO YOUR VOICE...';
+                if (subtitleText) subtitleText.textContent = 'Aapki aawaz sun rahi hu...';
+                if (micBtn) micBtn.classList.add('listening');
+                if (interruptBtn) interruptBtn.classList.add('hidden');
                 break;
 
             case VoiceState.PROCESSING:
-                statusText.textContent = 'PROCESSING THOUGHTS...';
-                subtitleText.textContent = 'Sawal ka jawaab dhoondh rahi hu...';
-                micBtn.classList.remove('listening');
-                interruptBtn.classList.add('hidden');
+                if (statusText) statusText.textContent = 'PROCESSING THOUGHTS...';
+                if (subtitleText) subtitleText.textContent = 'Sawal ka jawaab dhoondh rahi hu...';
+                if (micBtn) micBtn.classList.remove('listening');
+                if (interruptBtn) interruptBtn.classList.add('hidden');
                 break;
 
             case VoiceState.RESPONDING:
-                statusText.textContent = 'KAI IS SPEAKING...';
-                subtitleText.textContent = 'Aapko jawaab de rahi hu...';
-                micBtn.classList.remove('listening');
-                interruptBtn.classList.remove('hidden');
+                if (statusText) statusText.textContent = 'KAI IS SPEAKING...';
+                if (subtitleText) subtitleText.textContent = 'Aapko jawaab de rahi hu...';
+                if (micBtn) micBtn.classList.remove('listening');
+                if (interruptBtn) interruptBtn.classList.remove('hidden');
                 break;
         }
     }
 
     // 5. WEB AUDIO API & REAL-TIME AUDIO VISUALIZER ORB
     function initAudioContext() {
-        if (!audioCtx) {
-            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-            if (AudioContextClass) {
-                audioCtx = new AudioContextClass();
-                analyserNode = audioCtx.createAnalyser();
-                analyserNode.fftSize = 64;
+        try {
+            if (!audioCtx) {
+                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                if (AudioContextClass) {
+                    audioCtx = new AudioContextClass();
+                    analyserNode = audioCtx.createAnalyser();
+                    analyserNode.fftSize = 64;
+                }
             }
-        }
-        if (audioCtx && audioCtx.state === 'suspended') {
-            audioCtx.resume();
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        } catch (e) {
+            console.warn('AudioContext init error:', e);
         }
     }
 
     async function setupMicrophoneAudio() {
         initAudioContext();
         try {
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return false;
             micStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
             if (audioCtx && analyserNode) {
                 micSourceNode = audioCtx.createMediaStreamSource(micStream);
@@ -122,12 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             return true;
         } catch (err) {
-            console.warn('Microphone error:', err);
-            if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-                showToast('Microphone access denied. Please allow mic permissions in your browser.', 6000);
-            } else {
-                showToast('Microphone not available or disconnected.', 5000);
-            }
+            console.warn('Microphone stream error:', err);
             return false;
         }
     }
@@ -138,7 +139,7 @@ document.addEventListener('DOMContentLoaded', () => {
             micStream = null;
         }
         if (micSourceNode) {
-            micSourceNode.disconnect();
+            try { micSourceNode.disconnect(); } catch (e) {}
             micSourceNode = null;
         }
     }
@@ -146,6 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 60 FPS Glowing Particle Audio Visualizer Render Loop
     let orbFrame = 0;
     function renderVisualizerOrb() {
+        if (!ctx || !audioOrbCanvas) return;
         ctx.clearRect(0, 0, audioOrbCanvas.width, audioOrbCanvas.height);
         
         let audioVolume = 0;
@@ -163,7 +165,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const centerY = audioOrbCanvas.height / 2;
         const baseRadius = 90 + (audioVolume * 0.35);
 
-        // Draw Reactive Glowing Energy Ring
         ctx.save();
         ctx.beginPath();
         ctx.arc(centerX, centerY, baseRadius, 0, Math.PI * 2);
@@ -187,7 +188,6 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.stroke();
         ctx.restore();
 
-        // Animated Lip Sync Mouth Overlay when responding
         if (currentState === VoiceState.RESPONDING) {
             const mouthHeight = Math.abs(Math.sin(orbFrame * 0.3)) * 12 + 3;
             ctx.beginPath();
@@ -220,7 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 .map(result => result[0].transcript)
                 .join('');
 
-            userInput.value = transcript;
+            if (userInput) userInput.value = transcript;
 
             if (event.results[0].isFinal) {
                 handleUserMessage(transcript);
@@ -229,8 +229,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         recognition.onerror = (event) => {
             console.warn('Speech recognition error:', event.error);
-            if (event.error !== 'no-speech') {
-                showToast(`Speech recognition issue: ${event.error}`, 3000);
+            if (event.error === 'not-allowed') {
+                showToast('Microphone access blocked. Click the lock icon in browser address bar to allow mic access.', 6000);
+            } else if (event.error !== 'no-speech') {
+                showToast(`Speech recognition note: ${event.error}`, 3000);
             }
             if (currentState === VoiceState.LISTENING) {
                 setState(VoiceState.IDLE);
@@ -243,7 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
     } else {
-        showToast('Speech recognition not supported in this browser. You can type messages.', 5000);
+        showToast('Speech recognition is not supported in this browser version. You can type messages.', 6000);
     }
 
     async function startListening() {
@@ -251,14 +253,21 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentState === VoiceState.RESPONDING) {
             interruptResponse();
         }
-        const hasMic = await setupMicrophoneAudio();
-        if (recognition && hasMic) {
+        
+        // 1. Start Native Speech Recognition Immediately
+        if (recognition) {
             try {
                 recognition.start();
             } catch (e) {
                 console.warn('Recognition start exception:', e);
             }
+        } else {
+            showToast('Speech recognition is not supported in this browser. Please type your message.', 4000);
+            return;
         }
+
+        // 2. Setup Audio Visualizer Non-Blockingly
+        setupMicrophoneAudio().catch(err => console.log('Visualizer mic setup note:', err));
     }
 
     function stopListening() {
@@ -272,24 +281,25 @@ document.addEventListener('DOMContentLoaded', () => {
     function populateVoices() {
         if ('speechSynthesis' in window) {
             voices = window.speechSynthesis.getVoices();
-            voiceSelect.innerHTML = '';
-            
-            const preferredVoices = voices.filter(v => 
-                v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Female') || v.name.includes('Zira') || v.name.includes('Samantha') || v.name.includes('Hindi')
-            );
-            
-            const displayList = preferredVoices.length > 0 ? preferredVoices : voices;
-            displayList.forEach((voice) => {
-                const option = document.createElement('option');
-                option.value = voice.name;
-                option.textContent = `${voice.name} (${voice.lang})`;
-                voiceSelect.appendChild(option);
-            });
+            if (voiceSelect) {
+                voiceSelect.innerHTML = '';
+                const preferredVoices = voices.filter(v => 
+                    v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Female') || v.name.includes('Zira') || v.name.includes('Samantha') || v.name.includes('Hindi')
+                );
+                
+                const displayList = preferredVoices.length > 0 ? preferredVoices : voices;
+                displayList.forEach((voice) => {
+                    const option = document.createElement('option');
+                    option.value = voice.name;
+                    option.textContent = `${voice.name} (${voice.lang})`;
+                    voiceSelect.appendChild(option);
+                });
+            }
         }
     }
 
     populateVoices();
-    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+    if ('speechSynthesis' in window && window.speechSynthesis.onvoiceschanged !== undefined) {
         window.speechSynthesis.onvoiceschanged = populateVoices;
     }
 
@@ -299,67 +309,82 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        window.speechSynthesis.cancel(); // Clear prior speech
-        lastResponseText = text;
+        try {
+            window.speechSynthesis.cancel();
+            lastResponseText = text;
 
-        const utterance = new SpeechSynthesisUtterance(text);
-        const selectedVoiceName = voiceSelect.value;
-        const selectedVoice = voices.find(v => v.name === selectedVoiceName);
-        if (selectedVoice) utterance.voice = selectedVoice;
-
-        utterance.pitch = 1.35; // Cute anime girl pitch
-        utterance.rate = 1.05;
-
-        utterance.onstart = () => {
-            setState(VoiceState.RESPONDING);
-        };
-
-        utterance.onend = () => {
-            if (isHandsFree) {
-                setTimeout(() => startListening(), 600);
-            } else {
-                setState(VoiceState.IDLE);
+            const utterance = new SpeechSynthesisUtterance(text);
+            if (voiceSelect) {
+                const selectedVoiceName = voiceSelect.value;
+                const selectedVoice = voices.find(v => v.name === selectedVoiceName) || voices[0];
+                if (selectedVoice) utterance.voice = selectedVoice;
             }
-        };
 
-        utterance.onerror = () => {
+            utterance.pitch = 1.25;
+            utterance.rate = 1.0;
+
+            utterance.onstart = () => {
+                setState(VoiceState.RESPONDING);
+            };
+
+            utterance.onend = () => {
+                if (isHandsFree) {
+                    setTimeout(() => startListening(), 600);
+                } else {
+                    setState(VoiceState.IDLE);
+                }
+            };
+
+            utterance.onerror = (e) => {
+                console.warn('Speech synthesis error:', e);
+                setState(VoiceState.IDLE);
+            };
+
+            window.speechSynthesis.speak(utterance);
+        } catch (e) {
+            console.error('Speech synthesis exception:', e);
             setState(VoiceState.IDLE);
-        };
-
-        window.speechSynthesis.speak(utterance);
+        }
     }
 
-    // BARGE-IN INTERRUPTION HANDLER
     function interruptResponse() {
         if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
+            try { window.speechSynthesis.cancel(); } catch (e) {}
         }
-        showToast('Assistant response interrupted', 2000);
+        showToast('Interrupted AI response', 2000);
         setState(VoiceState.IDLE);
     }
 
-    interruptBtn.addEventListener('click', interruptResponse);
+    if (interruptBtn) interruptBtn.addEventListener('click', interruptResponse);
 
     // 8. INTERACTION & CONVERSATION HANDLERS
-    micBtn.addEventListener('click', () => {
-        if (currentState === VoiceState.LISTENING) {
-            stopListening();
-        } else {
-            startListening();
-        }
-    });
+    if (micBtn) {
+        micBtn.addEventListener('click', () => {
+            if (currentState === VoiceState.LISTENING) {
+                stopListening();
+            } else {
+                startListening();
+            }
+        });
+    }
 
-    sendBtn.addEventListener('click', () => {
-        const text = userInput.value.trim();
-        if (text) handleUserMessage(text);
-    });
+    if (sendBtn) {
+        sendBtn.addEventListener('click', () => {
+            if (userInput) {
+                const text = userInput.value.trim();
+                if (text) handleUserMessage(text);
+            }
+        });
+    }
 
-    userInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            const text = userInput.value.trim();
-            if (text) handleUserMessage(text);
-        }
-    });
+    if (userInput) {
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                const text = userInput.value.trim();
+                if (text) handleUserMessage(text);
+            }
+        });
+    }
 
     document.querySelectorAll('.chip').forEach(chip => {
         chip.addEventListener('click', () => {
@@ -367,43 +392,52 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    handsFreeBtn.addEventListener('click', () => {
-        isHandsFree = !isHandsFree;
-        handsFreeBtn.classList.toggle('active', isHandsFree);
-        if (isHandsFree) {
-            handsFreeBtn.querySelector('.btn-text').textContent = 'Hands-Free: ON';
-            showToast('Hands-Free Mode Activated', 3000);
-            startListening();
-        } else {
-            handsFreeBtn.querySelector('.btn-text').textContent = 'Hands-Free';
-            showToast('Hands-Free Mode Deactivated', 3000);
-            stopListening();
-        }
-    });
+    if (handsFreeBtn) {
+        handsFreeBtn.addEventListener('click', () => {
+            isHandsFree = !isHandsFree;
+            handsFreeBtn.classList.toggle('active', isHandsFree);
+            const textSpan = handsFreeBtn.querySelector('.btn-text');
+            if (isHandsFree) {
+                if (textSpan) textSpan.textContent = 'Hands-Free: ON';
+                showToast('Hands-Free Mode Activated', 3000);
+                startListening();
+            } else {
+                if (textSpan) textSpan.textContent = 'Hands-Free';
+                showToast('Hands-Free Mode Deactivated', 3000);
+                stopListening();
+            }
+        });
+    }
 
-    newSessionBtn.addEventListener('click', () => {
-        interruptResponse();
-        chatHistory.innerHTML = '';
-        appendMessage('bot', 'New conversation session started! Boliye master, main kaise madad karu?');
-        showToast('Started new conversation session', 3000);
-    });
+    if (newSessionBtn) {
+        newSessionBtn.addEventListener('click', () => {
+            interruptResponse();
+            if (chatHistory) chatHistory.innerHTML = '';
+            appendMessage('bot', 'New conversation session started! Boliye master, main kaise madad karu?');
+            showToast('Started new conversation session', 3000);
+        });
+    }
 
-    clearChatBtn.addEventListener('click', () => {
-        chatHistory.innerHTML = '';
-        showToast('Cleared conversation history', 2000);
-    });
+    if (clearChatBtn) {
+        clearChatBtn.addEventListener('click', () => {
+            if (chatHistory) chatHistory.innerHTML = '';
+            showToast('Cleared conversation history', 2000);
+        });
+    }
 
-    replayBtn.addEventListener('click', () => {
-        if (lastResponseText) {
-            speakText(lastResponseText);
-        } else {
-            showToast('No previous AI response to replay.', 3000);
-        }
-    });
+    if (replayBtn) {
+        replayBtn.addEventListener('click', () => {
+            if (lastResponseText) {
+                speakText(lastResponseText);
+            } else {
+                showToast('No previous AI response to replay.', 3000);
+            }
+        });
+    }
 
     // 9. INTENT ROUTING & BACKEND COMMUNICATOR
     async function handleUserMessage(text) {
-        userInput.value = '';
+        if (userInput) userInput.value = '';
         if (currentState === VoiceState.RESPONDING) {
             interruptResponse();
         }
@@ -482,6 +516,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function appendMessage(sender, text) {
+        if (!chatHistory) return;
         const msgDiv = document.createElement('div');
         msgDiv.className = `msg ${sender}-msg`;
         const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
