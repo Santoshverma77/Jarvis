@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const statusText = document.getElementById('statusText');
     const statusIndicator = document.getElementById('statusIndicator');
     const avatarFrame = document.getElementById('avatarFrame');
+    const animeAvatar = document.getElementById('animeAvatar');
     const waveform = document.getElementById('waveform');
     const voiceSelect = document.getElementById('voiceSelect');
     const handsFreeBtn = document.getElementById('handsFreeBtn');
@@ -50,14 +51,12 @@ document.addEventListener('DOMContentLoaded', () => {
         recognition.onerror = (event) => {
             console.error('Speech recognition error:', event.error);
             stopListening();
-            setStatus('ERROR LISTENING. TRY AGAIN', 'error');
+            setStatus('READY & LISTENING', 'ready');
         };
 
         recognition.onend = () => {
             stopListening();
         };
-    } else {
-        alert('Voice Recognition is not supported by your browser. Please use Chrome or Edge.');
     }
 
     // Load Web Speech Synthesis Voices
@@ -66,13 +65,12 @@ document.addEventListener('DOMContentLoaded', () => {
             voices = window.speechSynthesis.getVoices();
             voiceSelect.innerHTML = '';
             
-            // Prioritize female / anime sounding voices
             const preferredVoices = voices.filter(v => 
-                v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Female') || v.name.includes('Zira') || v.name.includes('Samantha')
+                v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Female') || v.name.includes('Zira') || v.name.includes('Samantha') || v.name.includes('Hindi')
             );
             
             const displayList = preferredVoices.length > 0 ? preferredVoices : voices;
-            displayList.forEach((voice, index) => {
+            displayList.forEach((voice) => {
                 const option = document.createElement('option');
                 option.value = voice.name;
                 option.textContent = `${voice.name} (${voice.lang})`;
@@ -90,22 +88,21 @@ document.addEventListener('DOMContentLoaded', () => {
     function speakText(text) {
         if (!('speechSynthesis' in window)) return;
 
-        window.speechSynthesis.cancel(); // Stop any active speech
+        window.speechSynthesis.cancel();
 
         const utterance = new SpeechSynthesisUtterance(text);
         
-        // Find selected voice
         const selectedVoiceName = voiceSelect.value;
         const selectedVoice = voices.find(v => v.name === selectedVoiceName);
         if (selectedVoice) utterance.voice = selectedVoice;
 
-        // Tune pitch and rate for anime girl voice tone
-        utterance.pitch = 1.35; // Higher pitch for cute anime tone
-        utterance.rate = 1.05;  // Slightly energetic rate
+        utterance.pitch = 1.35; // Cute energetic anime tone
+        utterance.rate = 1.05;
 
         utterance.onstart = () => {
             isSpeaking = true;
             avatarFrame.classList.add('speaking');
+            animeAvatar.classList.add('avatar-talking');
             waveform.classList.add('active');
             setStatus('KAI IS SPEAKING...', 'speaking');
             startMouthAnimation();
@@ -114,6 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
         utterance.onend = () => {
             isSpeaking = false;
             avatarFrame.classList.remove('speaking');
+            animeAvatar.classList.remove('avatar-talking');
             waveform.classList.remove('active');
             stopMouthAnimation();
             
@@ -127,6 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
         utterance.onerror = () => {
             isSpeaking = false;
             avatarFrame.classList.remove('speaking');
+            animeAvatar.classList.remove('avatar-talking');
             waveform.classList.remove('active');
             stopMouthAnimation();
             setStatus('READY & LISTENING', 'ready');
@@ -135,50 +134,53 @@ document.addEventListener('DOMContentLoaded', () => {
         window.speechSynthesis.speak(utterance);
     }
 
-    // Canvas Anime Lip-Sync Mouth Animation
+    // Interactive Animated Character Canvas Overlay (Blinking + Breathing + Lip Sync)
     let animId = null;
+    let blinkTimer = 0;
     function startMouthAnimation() {
         let frame = 0;
         function animate() {
             ctx.clearRect(0, 0, avatarCanvas.width, avatarCanvas.height);
             
-            // Draw subtle glowing lip movement overlay
+            // Mouth Lip-Sync Movement
             if (isSpeaking) {
-                const mouthHeight = Math.abs(Math.sin(frame * 0.2)) * 14 + 4;
+                const mouthHeight = Math.abs(Math.sin(frame * 0.25)) * 14 + 4;
                 ctx.beginPath();
-                ctx.ellipse(200, 265, 12, mouthHeight, 0, 0, Math.PI * 2);
-                ctx.fillStyle = 'rgba(255, 105, 180, 0.4)';
-                ctx.shadowBlur = 10;
+                ctx.ellipse(200, 260, 14, mouthHeight, 0, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255, 105, 180, 0.6)';
+                ctx.shadowBlur = 12;
                 ctx.shadowColor = '#ff007f';
                 ctx.fill();
             }
+
+            // Eye Blink Effect
+            blinkTimer++;
+            if (blinkTimer % 180 < 10) {
+                ctx.fillStyle = 'rgba(20, 25, 45, 0.95)';
+                ctx.fillRect(145, 160, 45, 15);
+                ctx.fillRect(210, 160, 45, 15);
+            }
+
             frame++;
             animId = requestAnimationFrame(animate);
         }
         animate();
     }
+    startMouthAnimation();
 
     function stopMouthAnimation() {
-        if (animId) cancelAnimationFrame(animId);
         ctx.clearRect(0, 0, avatarCanvas.width, avatarCanvas.height);
     }
 
-    // Mic Button Handlers
+    // Mic Controls
     micBtn.addEventListener('click', () => {
-        if (isListening) {
-            stopListening();
-        } else {
-            startListening();
-        }
+        if (isListening) stopListening();
+        else startListening();
     });
 
     function startListening() {
         if (recognition && !isListening && !isSpeaking) {
-            try {
-                recognition.start();
-            } catch (e) {
-                console.log('Recognition start error:', e);
-            }
+            try { recognition.start(); } catch (e) { console.log(e); }
         }
     }
 
@@ -192,32 +194,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Send Button & Enter Key Handlers
     sendBtn.addEventListener('click', () => {
         const text = userInput.value.trim();
-        if (text) {
-            handleUserMessage(text);
-        }
+        if (text) handleUserMessage(text);
     });
 
     userInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
             const text = userInput.value.trim();
-            if (text) {
-                handleUserMessage(text);
-            }
+            if (text) handleUserMessage(text);
         }
     });
 
-    // Quick Chips Handlers
     document.querySelectorAll('.chip').forEach(chip => {
         chip.addEventListener('click', () => {
-            const cmd = chip.getAttribute('data-cmd');
-            handleUserMessage(cmd);
+            handleUserMessage(chip.getAttribute('data-cmd'));
         });
     });
 
-    // Hands-Free Toggle Button
     handsFreeBtn.addEventListener('click', () => {
         isHandsFree = !isHandsFree;
         handsFreeBtn.classList.toggle('active', isHandsFree);
@@ -230,18 +224,47 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Clear Chat
     clearChatBtn.addEventListener('click', () => {
         chatHistory.innerHTML = '';
-        appendMessage('bot', 'Chat history cleared! Main taiyar hu, bataiye kya karna hai?');
+        appendMessage('bot', 'Chat history cleared! Main taiyar hu master!');
     });
 
-    // Handle User Input & Send to Jarvis API Backend
+    // Handle User Input & Action Commands (YouTube, Search, System Apps)
     async function handleUserMessage(text) {
         userInput.value = '';
         appendMessage('user', text);
         setStatus('THINKING...', 'thinking');
 
+        const lowerText = text.toLowerCase();
+
+        // 🎵 Intent 1: YouTube Music / Song Playback
+        if (lowerText.includes('youtube') || lowerText.includes('song') || lowerText.includes('baja') || lowerText.includes('music') || lowerText.includes('play')) {
+            let query = lowerText.replace(/play|song|baja|batao|youtube|ko|me|main|se|mujhe|chalao|dikhao|baja do|kar dikhao|romantic|sa/gi, '').trim();
+            if (!query || query.length < 2) query = 'romantic songs hindi';
+
+            const reply = `Aapke liye YouTube par '${query}' song play kar rahi hu master!`;
+            appendMessage('bot', reply);
+            speakText(reply);
+
+            // Open YouTube search/song directly in a new browser tab!
+            const ytUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+            setTimeout(() => {
+                window.open(ytUrl, '_blank');
+            }, 1000);
+            return;
+        }
+
+        // 🔍 Intent 2: Google Web Search
+        if (lowerText.includes('search') || lowerText.includes('dhundho') || lowerText.includes('google')) {
+            let query = lowerText.replace(/search|dhundho|google|karo|per/gi, '').trim();
+            const reply = `Google par '${query}' search kar rahi hu!`;
+            appendMessage('bot', reply);
+            speakText(reply);
+            window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank');
+            return;
+        }
+
+        // Standard API Request to Backend Server
         try {
             const response = await fetch('/api/chat', {
                 method: 'POST',
@@ -250,56 +273,39 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             const data = await response.json();
-            const reply = data.reply || "Main samajh nahi paayi, kya aap dobara keh sakte hain?";
+            const reply = data.reply || "Main samajh nahi paayi, kya aap dobara bol sakte hain?";
             
             appendMessage('bot', reply);
             speakText(reply);
 
         } catch (error) {
-            console.error('API Error:', error);
-            // Fallback Engine if backend server is offline
             const fallbackReply = generateFallbackReply(text);
             appendMessage('bot', fallbackReply);
             speakText(fallbackReply);
         }
     }
 
-    // Local Fallback Response Engine for Offline / Standalone usage
     function generateFallbackReply(msg) {
         const lower = msg.toLowerCase();
-        
         if (lower.includes('hello') || lower.includes('hi') || lower.includes('namaste') || lower.includes('hey')) {
-            return "Konnichiwa! Main aapki Anime AI Assistant KAI hu. Main aapki kya madad kar sakti hu?";
+            return "Konnichiwa! Main aapki Anime AI Assistant KAI hu. Aap mujhse bol kar song bajwa sakte hain ya system search karwa sakte hain!";
         }
         if (lower.includes('joke')) {
-            const jokes = [
-                "Why do programmers prefer dark mode? Because light attracts bugs!",
-                "There are 10 types of people in the world: those who understand binary, and those who don't!",
-                "Why was the JavaScript developer sad? Because he didn't Node how to Express himself!"
-            ];
-            return jokes[Math.floor(Math.random() * jokes.length)];
+            return "Why do programmers prefer dark mode? Because light attracts bugs!";
         }
         if (lower.includes('quote') || lower.includes('motivation')) {
             return "Believe in yourself! Every expert was once a beginner. Keep coding and aiming high!";
         }
         if (lower.includes('weather')) {
-            return "Aaj mausam bhot suhana hai! Temperature lagbhag 26°C hai aur aasmaan saaf hai.";
+            return "Aaj mausam bhot achha hai! Temperature 26°C hai aur clear sky hai.";
         }
         if (lower.includes('time') || lower.includes('date')) {
             const now = new Date();
-            return `Abhi samay ho raha hai ${now.toLocaleTimeString()} aur aaj date hai ${now.toLocaleDateString()}.`;
+            return `Abhi samay ho raha hai ${now.toLocaleTimeString()} aur date hai ${now.toLocaleDateString()}.`;
         }
-        if (lower.includes('name') || lower.includes('who are you')) {
-            return "Mera naam KAI hai. Main aapki smart Anime AI Companion hu!";
-        }
-        if (lower.includes('bored')) {
-            return "Agar aap bored ho rahe hain to chaliye ek game khelte hain ya koi achhi movie dekhte hain!";
-        }
-        
-        return `Aapne kaha: "${msg}". Jarvis Command engine connected hai aur command process ho chuka hai!`;
+        return `Aapne kaha: "${msg}". Main aapki command follow kar rahi hu master!`;
     }
 
-    // Helper UI Functions
     function appendMessage(sender, text) {
         const msgDiv = document.createElement('div');
         msgDiv.className = `msg ${sender}-msg`;
