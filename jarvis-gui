@@ -1,0 +1,14 @@
+#!/bin/bash
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+cd "$DIR"
+PYTHON_BIN="python3"
+if [ -f "$DIR/env/bin/python3" ]; then
+    PYTHON_BIN="$DIR/env/bin/python3"
+fi
+
+echo "========================================================"
+echo " 🌟 STARTING ANIME AI GIRL VOICE ASSISTANT INTERFACE..."
+echo "========================================================"
+
+open "http://localhost:8080" 2>/dev/null || true
+PYTHONPATH="$DIR:$PYTHONPATH" "$PYTHON_BIN" web_ui/server.py 8080
