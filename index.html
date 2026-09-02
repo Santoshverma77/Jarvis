@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jarvis Anime AI Companion - Voice Assistant</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="stars-bg"></div>
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+
+    <div class="app-container">
+        <!-- Sidebar / Header -->
+        <header class="app-header">
+            <div class="logo">
+                <i class="fa-solid fa-microchip logo-icon"></i>
+                <span class="logo-text">JARVIS <span class="badge">ANIME AI v2.0</span></span>
+            </div>
+            <div class="header-controls">
+                <div class="voice-selector-wrapper">
+                    <i class="fa-solid fa-volume-high"></i>
+                    <select id="voiceSelect" class="cyber-select"></select>
+                </div>
+                <button id="handsFreeBtn" class="cyber-btn toggle-btn" title="Auto Voice Mode">
+                    <i class="fa-solid fa-bolt"></i> Hands-Free Mode
+                </button>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <!-- Left Side: Anime Avatar & Voice Visualizer -->
+            <section class="avatar-section">
+                <div class="avatar-card">
+                    <div class="status-indicator" id="statusIndicator">
+                        <span class="status-dot"></span>
+                        <span id="statusText">READY & LISTENING</span>
+                    </div>
+
+                    <div class="avatar-frame" id="avatarFrame">
+                        <div class="avatar-glow-ring"></div>
+                        <div class="pulse-ring"></div>
+                        <img src="anime_avatar.jpg" alt="Anime AI Assistant" class="anime-img" id="animeAvatar">
+                        
+                        <!-- Interactive Eye / Mouth Overlay Animation Canvas -->
+                        <canvas id="avatarCanvas" width="400" height="400"></canvas>
+                    </div>
+
+                    <h2 class="assistant-name">KAI <span class="role-tag">Your AI Companion</span></h2>
+                    <p class="subtitle">"Boliye master, main aapki kya madad kar sakti hu?"</p>
+
+                    <!-- Live Audio Waveform -->
+                    <div class="waveform" id="waveform">
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                        <div class="bar"></div>
+                    </div>
+
+                    <!-- Voice Mic Control Button -->
+                    <div class="mic-container">
+                        <button id="micBtn" class="mic-button" title="Click or Press Space to Speak">
+                            <i class="fa-solid fa-microphone mic-icon"></i>
+                        </button>
+                        <p class="mic-hint">Tap button or speak aloud to talk</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Side: Interaction & Chat Console -->
+            <section class="chat-section">
+                <div class="chat-header">
+                    <h3><i class="fa-solid fa-comments"></i> Voice & Text Console</h3>
+                    <button id="clearChatBtn" class="icon-btn" title="Clear Chat"><i class="fa-solid fa-trash-can"></i></button>
+                </div>
+
+                <div class="chat-history" id="chatHistory">
+                    <div class="msg bot-msg">
+                        <div class="msg-avatar"><img src="anime_avatar.jpg" alt="Kai"></div>
+                        <div class="msg-content">
+                            <span class="sender-name">KAI (AI Companion)</span>
+                            <p>Konnichiwa! Main aapki AI assistant KAI hu. Aap mujhse bol kar ya type karke kuch bhi pooch sakte hain! Try saying <strong>"Tell me a joke"</strong>, <strong>"What's the weather?"</strong>, ya <strong>"Calculate 45 * 12"</strong>.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Action Chips -->
+                <div class="quick-chips">
+                    <button class="chip" data-cmd="joke"><i class="fa-solid fa-laugh"></i> Tell a Joke</button>
+                    <button class="chip" data-cmd="quote"><i class="fa-solid fa-quote-left"></i> Motivation</button>
+                    <button class="chip" data-cmd="weather"><i class="fa-solid fa-cloud-sun"></i> Weather</button>
+                    <button class="chip" data-cmd="timeconv"><i class="fa-solid fa-clock"></i> Current Time</button>
+                    <button class="chip" data-cmd="bored"><i class="fa-solid fa-gamepad"></i> Suggest Activity</button>
+                </div>
+
+                <!-- Input Controls -->
+                <div class="chat-input-bar">
+                    <input type="text" id="userInput" placeholder="Bol kar baat karein ya yahan type karein..." autocomplete="off">
+                    <button id="sendBtn" class="send-button"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
