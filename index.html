@@ -2,135 +2,103 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#070913">
-    <meta name="description" content="Nova-grade Production AI Voice Assistant with Real-time Web Audio Visualizer and Speech Interaction">
-    <title>KAI - Production AI Voice Assistant</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>KAI - Anime AI Voice Assistant</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;900&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;900&family=Space+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="state-idle">
-    <!-- Ambient Background Effects -->
+<body>
     <div class="stars-bg"></div>
     <div class="glow-orb orb-1"></div>
     <div class="glow-orb orb-2"></div>
-    <div class="glow-orb orb-3"></div>
-
-    <!-- Notification Toast Banner -->
-    <div id="toastBanner" class="toast-banner hidden" role="alert">
-        <i id="toastIcon" class="fa-solid fa-circle-info"></i>
-        <span id="toastMessage">Welcome to KAI AI Voice Assistant</span>
-        <button id="toastClose" class="toast-close" aria-label="Close notification"><i class="fa-solid fa-xmark"></i></button>
-    </div>
 
     <div class="app-container">
-        <!-- Header Controls -->
+        <!-- App Header -->
         <header class="app-header">
             <div class="logo">
-                <i class="fa-solid fa-waveform logo-icon"></i>
-                <span class="logo-text">KAI <span class="badge">VOICE AI</span></span>
+                <i class="fa-solid fa-microchip logo-icon"></i>
+                <span class="logo-text">JARVIS <span class="badge">ANIME AI</span></span>
             </div>
             <div class="header-controls">
-                <div class="voice-selector-wrapper" title="Select Voice Engine">
+                <div class="voice-selector-wrapper">
                     <i class="fa-solid fa-volume-high"></i>
-                    <select id="voiceSelect" class="cyber-select" aria-label="Select Assistant Voice"></select>
+                    <select id="voiceSelect" class="cyber-select"></select>
                 </div>
-                <button id="handsFreeBtn" class="cyber-btn toggle-btn" title="Toggle Hands-Free Continuous Voice Mode">
-                    <i class="fa-solid fa-bolt"></i> <span class="btn-text">Hands-Free</span>
-                </button>
-                <button id="newSessionBtn" class="cyber-btn icon-only-btn" title="Start New Conversation">
-                    <i class="fa-solid fa-rotate-right"></i>
+                <button id="handsFreeBtn" class="cyber-btn toggle-btn">
+                    <i class="fa-solid fa-bolt"></i> Hands-Free
                 </button>
             </div>
         </header>
 
         <main class="main-content">
-            <!-- Left Side: Interactive 3D Audio Visualizer Orb & Assistant Avatar -->
-            <section class="visualizer-section">
-                <div class="visualizer-card">
-                    <!-- State Indicator Badge -->
-                    <div class="status-badge" id="statusBadge" data-state="IDLE">
+            <!-- Left Side: Anime Girl Avatar & Voice Controls -->
+            <section class="avatar-section">
+                <div class="avatar-card">
+                    <div class="status-indicator" id="statusIndicator">
                         <span class="status-dot"></span>
-                        <span id="statusText">READY & IDLE</span>
+                        <span id="statusText">READY & LISTENING</span>
                     </div>
 
-                    <!-- Audio Visualizer Orb Container -->
-                    <div class="visualizer-orb-container" id="visualizerOrbContainer">
-                        <div class="orb-ring ring-outer"></div>
-                        <div class="orb-ring ring-inner"></div>
-                        <div class="pulse-wave"></div>
-                        
-                        <!-- Reactive 60FPS Web Audio Canvas Visualizer -->
-                        <canvas id="audioOrbCanvas" width="360" height="360" aria-label="Interactive AI Voice Visualizer"></canvas>
-                        
-                        <!-- Avatar Portrait Overlay -->
-                        <img src="anime_avatar.jpg" alt="KAI AI Character" class="anime-avatar-img" id="animeAvatar">
+                    <div class="avatar-frame" id="avatarFrame">
+                        <div class="avatar-glow-ring"></div>
+                        <div class="pulse-ring"></div>
+                        <img src="anime_avatar.jpg" alt="Anime AI Character" class="anime-img" id="animeAvatar">
                     </div>
 
-                    <h2 class="assistant-name">KAI <span class="role-tag">Production AI Companion</span></h2>
-                    <p class="subtitle" id="subtitleText">"Boliye master, main sun rahi hu..."</p>
+                    <h2 class="assistant-name">KAI <span class="role-tag">Your AI Companion</span></h2>
+                    <p class="subtitle" id="subtitleText">"Boliye master, main aapki kya madad kar sakti hu?"</p>
 
-                    <!-- Real-Time Voice Waveform Spectrum -->
-                    <div class="spectrum-wave" id="spectrumWave" aria-hidden="true">
-                        <div class="s-bar"></div><div class="s-bar"></div><div class="s-bar"></div>
-                        <div class="s-bar"></div><div class="s-bar"></div><div class="s-bar"></div>
-                        <div class="s-bar"></div><div class="s-bar"></div><div class="s-bar"></div>
-                        <div class="s-bar"></div><div class="s-bar"></div><div class="s-bar"></div>
+                    <!-- Live Audio Waveform -->
+                    <div class="waveform" id="waveform">
+                        <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                        <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                        <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+                        <div class="bar"></div>
                     </div>
 
-                    <!-- Voice Interaction Main Controls -->
-                    <div class="voice-controls-bar">
-                        <button id="micBtn" class="primary-mic-btn" title="Tap to Start / Stop Voice Conversation" aria-label="Microphone Toggle">
+                    <!-- Mic Button -->
+                    <div class="mic-container">
+                        <button id="micBtn" class="mic-button" title="Click to Speak">
                             <i class="fa-solid fa-microphone mic-icon"></i>
                         </button>
-                        <button id="interruptBtn" class="interrupt-btn hidden" title="Interrupt Assistant & Listen" aria-label="Interrupt Response">
-                            <i class="fa-solid fa-hand"></i> Interrupt
-                        </button>
+                        <p class="mic-hint">Tap mic or speak aloud to talk</p>
                     </div>
-                    <p class="mic-hint" id="micHint">Tap mic or speak naturally to converse</p>
                 </div>
             </section>
 
-            <!-- Right Side: Streamed Conversation Log & Input -->
+            <!-- Right Side: Chat Console & Actions -->
             <section class="chat-section">
                 <div class="chat-header">
-                    <h3><i class="fa-solid fa-comments"></i> Conversation Stream</h3>
-                    <div class="chat-actions">
-                        <button id="replayBtn" class="icon-action-btn" title="Replay Last AI Response"><i class="fa-solid fa-play"></i></button>
-                        <button id="clearChatBtn" class="icon-action-btn" title="Clear Conversation History"><i class="fa-solid fa-trash-can"></i></button>
-                    </div>
+                    <h3><i class="fa-solid fa-comments"></i> Voice & Text Console</h3>
+                    <button id="clearChatBtn" class="icon-btn" title="Clear Chat"><i class="fa-solid fa-trash-can"></i></button>
                 </div>
 
-                <!-- Chat History Feed -->
-                <div class="chat-history" id="chatHistory" role="log" aria-live="polite">
+                <div class="chat-history" id="chatHistory">
                     <div class="msg bot-msg">
-                        <div class="msg-avatar"><img src="anime_avatar.jpg" alt="Kai Avatar"></div>
+                        <div class="msg-avatar"><img src="anime_avatar.jpg" alt="Kai"></div>
                         <div class="msg-content">
-                            <div class="msg-meta">
-                                <span class="sender-name">KAI (AI Companion)</span>
-                                <span class="msg-time">Just now</span>
-                            </div>
-                            <p>Konnichiwa! Main aapki AI voice assistant KAI hu. Main aapki har aawaz sunne aur har task me madad karne ke liye taiyar hu! Try saying <strong>"Play romantic songs on YouTube"</strong>, <strong>"Tell me a joke"</strong>, ya <strong>"What is the weather?"</strong></p>
+                            <span class="sender-name">KAI (AI Companion)</span>
+                            <p>Konnichiwa! Main aapki AI voice assistant KAI hu. Aap mujhse bol kar ya type karke kuch bhi pooch sakte hain! Try saying <strong>"Play romantic songs on YouTube"</strong>, <strong>"Tell me a joke"</strong>, ya <strong>"What is the weather?"</strong></p>
                         </div>
                     </div>
                 </div>
 
-                <!-- Quick Action Suggestion Chips -->
-                <div class="quick-chips" aria-label="Quick Action Suggestions">
+                <!-- Quick Action Chips -->
+                <div class="quick-chips">
                     <button class="chip" data-cmd="Play romantic songs on YouTube"><i class="fa-brands fa-youtube"></i> Play Music</button>
-                    <button class="chip" data-cmd="Tell me a joke"><i class="fa-solid fa-laugh-beam"></i> Tell a Joke</button>
+                    <button class="chip" data-cmd="Tell me a joke"><i class="fa-solid fa-laugh"></i> Tell a Joke</button>
                     <button class="chip" data-cmd="Give me a motivational quote"><i class="fa-solid fa-quote-left"></i> Motivation</button>
                     <button class="chip" data-cmd="What is the weather today?"><i class="fa-solid fa-cloud-sun"></i> Weather</button>
-                    <button class="chip" data-cmd="What time is it?"><i class="fa-solid fa-clock"></i> Current Time</button>
+                    <button class="chip" data-cmd="What time is it?"><i class="fa-solid fa-clock"></i> Time</button>
                 </div>
 
-                <!-- Text & Voice Input Bar -->
+                <!-- Input Controls -->
                 <div class="chat-input-bar">
-                    <input type="text" id="userInput" placeholder="Bol kar baat karein ya yahan type karein..." autocomplete="off" aria-label="Message Input">
-                    <button id="sendBtn" class="send-button" aria-label="Send Message"><i class="fa-solid fa-paper-plane"></i></button>
+                    <input type="text" id="userInput" placeholder="Bol kar baat karein ya yahan type karein..." autocomplete="off">
+                    <button id="sendBtn" class="send-button"><i class="fa-solid fa-paper-plane"></i></button>
                 </div>
             </section>
         </main>
