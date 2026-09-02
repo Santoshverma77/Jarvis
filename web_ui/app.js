@@ -18,20 +18,20 @@ document.addEventListener('DOMContentLoaded', () => {
     let recognition = null;
     let voices = [];
 
-    // Initialize Web Speech Recognition
+    // 1. Native Hindi Speech Recognition Engine
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRecognition) {
         try {
             recognition = new SpeechRecognition();
             recognition.continuous = false;
             recognition.interimResults = true;
-            recognition.lang = 'en-US';
+            recognition.lang = 'hi-IN'; // Default to Hindi voice input!
 
             recognition.onstart = () => {
                 isListening = true;
                 if (micBtn) micBtn.classList.add('listening');
                 if (waveform) waveform.classList.add('active');
-                setStatus('LISTENING TO YOUR VOICE...', '#ff007f');
+                setStatus('Aapki aawaz sun rahi hu...', '#ff007f');
             };
 
             recognition.onresult = (event) => {
@@ -59,14 +59,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Populate Web Speech Voices
+    // 2. Select Native Indian Female / Hindi Voice
     function populateVoices() {
         if ('speechSynthesis' in window) {
             voices = window.speechSynthesis.getVoices();
             if (voiceSelect) {
                 voiceSelect.innerHTML = '';
+                
+                // Filter for Hindi / Indian Female voices
                 const preferredVoices = voices.filter(v => 
-                    v.name.includes('Google') || v.name.includes('Natural') || v.name.includes('Female') || v.name.includes('Zira') || v.name.includes('Samantha') || v.name.includes('Hindi')
+                    v.lang.includes('hi') || v.lang.includes('IN') || v.name.includes('Hindi') || v.name.includes('Google') || v.name.includes('Swara') || v.name.includes('Female')
                 );
                 
                 const displayList = preferredVoices.length > 0 ? preferredVoices : voices;
@@ -74,6 +76,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     const option = document.createElement('option');
                     option.value = voice.name;
                     option.textContent = `${voice.name} (${voice.lang})`;
+                    if (voice.lang.includes('hi') || voice.name.includes('Hindi')) {
+                        option.selected = true;
+                    }
                     voiceSelect.appendChild(option);
                 });
             }
@@ -85,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
         window.speechSynthesis.onvoiceschanged = populateVoices;
     }
 
-    // Speech Synthesis
+    // 3. Indian Girl Voice Speech Output
     function speakText(text) {
         if (!('speechSynthesis' in window)) return;
 
@@ -93,20 +98,22 @@ document.addEventListener('DOMContentLoaded', () => {
             window.speechSynthesis.cancel(); // Stop prior speech
 
             const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'hi-IN'; // Native Hindi pronunciation
+
             if (voiceSelect) {
                 const selectedVoiceName = voiceSelect.value;
-                const selectedVoice = voices.find(v => v.name === selectedVoiceName) || voices[0];
+                const selectedVoice = voices.find(v => v.name === selectedVoiceName) || voices.find(v => v.lang.includes('hi')) || voices[0];
                 if (selectedVoice) utterance.voice = selectedVoice;
             }
 
-            utterance.pitch = 1.3;
-            utterance.rate = 1.05;
+            utterance.pitch = 1.3; // Warm cute girl voice pitch
+            utterance.rate = 1.0;
 
             utterance.onstart = () => {
                 isSpeaking = true;
                 if (avatarFrame) avatarFrame.classList.add('speaking');
                 if (waveform) waveform.classList.add('active');
-                setStatus('KAI IS SPEAKING...', '#00f2fe');
+                setStatus('KAI bol rahi hai...', '#00f2fe');
             };
 
             utterance.onend = () => {
@@ -117,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (isHandsFree) {
                     setTimeout(() => startListening(), 600);
                 } else {
-                    setStatus('READY & LISTENING', '#00f2fe');
+                    setStatus('Suno master, main taiyar hu!', '#00f2fe');
                 }
             };
 
@@ -125,13 +132,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 isSpeaking = false;
                 if (avatarFrame) avatarFrame.classList.remove('speaking');
                 if (waveform) waveform.classList.remove('active');
-                setStatus('READY & LISTENING', '#00f2fe');
+                setStatus('Suno master, main taiyar hu!', '#00f2fe');
             };
 
             window.speechSynthesis.speak(utterance);
         } catch (e) {
             console.warn('TTS error:', e);
-            setStatus('READY & LISTENING', '#00f2fe');
+            setStatus('Suno master, main taiyar hu!', '#00f2fe');
         }
     }
 
@@ -146,7 +153,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log('Recognition start error:', e);
             }
         } else {
-            alert('Speech recognition is not supported in your browser. Please type your message in the input box below.');
+            alert('Aapke browser me voice recognition support nahi hai. Aap niche text box me type kar sakte hain!');
         }
     }
 
@@ -157,7 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (recognition) {
             try { recognition.stop(); } catch (e) {}
         }
-        setStatus('READY & LISTENING', '#00f2fe');
+        setStatus('Suno master, main taiyar hu!', '#00f2fe');
     }
 
     // Mic Click Handler
@@ -214,7 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (clearChatBtn) {
         clearChatBtn.addEventListener('click', () => {
             if (chatHistory) chatHistory.innerHTML = '';
-            appendMessage('bot', 'Chat history cleared! Boliye master, main kaise madad karu?');
+            appendMessage('bot', 'Chat history clear kar di hai! Boliye master, main kya karu?');
         });
     }
 
@@ -222,37 +229,9 @@ document.addEventListener('DOMContentLoaded', () => {
     async function handleUserMessage(text) {
         if (userInput) userInput.value = '';
         appendMessage('user', text);
-        setStatus('THINKING...', '#f59e0b');
+        setStatus('Laptop par command execute ho rahi hai...', '#f59e0b');
 
-        const lowerText = text.toLowerCase();
-
-        // INTENT 1: YouTube Music Playback
-        if (lowerText.includes('youtube') || lowerText.includes('song') || lowerText.includes('baja') || lowerText.includes('music') || lowerText.includes('play')) {
-            let query = lowerText.replace(/play|song|baja|batao|youtube|ko|me|main|se|mujhe|chalao|dikhao|baja do|kar dikhao|romantic|sa/gi, '').trim();
-            if (!query || query.length < 2) query = 'romantic songs hindi';
-
-            const reply = `Aapke liye YouTube par '${query}' song play kar rahi hu master!`;
-            appendMessage('bot', reply);
-            speakText(reply);
-
-            const ytUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
-            setTimeout(() => {
-                window.open(ytUrl, '_blank');
-            }, 1000);
-            return;
-        }
-
-        // INTENT 2: Google Search
-        if (lowerText.includes('search') || lowerText.includes('dhundho') || lowerText.includes('google')) {
-            let query = lowerText.replace(/search|dhundho|google|karo|per/gi, '').trim();
-            const reply = `Google par '${query}' search kar rahi hu!`;
-            appendMessage('bot', reply);
-            speakText(reply);
-            window.open(`https://www.google.com/search?q=${encodeURIComponent(query)}`, '_blank');
-            return;
-        }
-
-        // API Fetch to Python Backend
+        // API Fetch to Local Server
         try {
             const response = await fetch('/api/chat', {
                 method: 'POST',
@@ -261,7 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             const data = await response.json();
-            const reply = data.reply || "Main samajh nahi paayi, kya aap dobara keh sakte hain?";
+            const reply = data.reply || "Ji master, main samajh gayi hu!";
             
             appendMessage('bot', reply);
             speakText(reply);
@@ -275,23 +254,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function generateFallbackReply(msg) {
         const lower = msg.toLowerCase();
-        if (lower.includes('hello') || lower.includes('hi') || lower.includes('namaste') || lower.includes('hey')) {
-            return "Konnichiwa! Main aapki Anime AI Assistant KAI hu. Main aapki kya madad kar sakti hu?";
+        if (lower.includes('photo nikal') || lower.includes('camera') || lower.includes('picture')) {
+            return "Ji master! Laptop ka camera open kar diya hai photo nikalne ke liye.";
         }
-        if (lower.includes('joke')) {
-            return "Why do programmers prefer dark mode? Because light attracts bugs!";
+        if (lower.includes('photo dikha') || lower.includes('photos') || lower.includes('gallery')) {
+            return "Ji master! Laptop ki Pictures gallery open kar di hai.";
         }
-        if (lower.includes('quote') || lower.includes('motivation')) {
-            return "Believe in yourself! Every expert was once a beginner. Keep coding and aiming high!";
+        if (lower.includes('youtube') || lower.includes('song') || lower.includes('gaana')) {
+            return "Ji master! YouTube par aapka romantic song play kar diya hai.";
         }
-        if (lower.includes('weather')) {
-            return "Aaj mausam bhot achha hai! Temperature 26°C hai aur clear sky hai.";
+        if (lower.includes('hello') || lower.includes('hi') || lower.includes('namaste')) {
+            return "Konnichiwa! Main aapki Anime AI Assistant KAI hu. Aap apne laptop me mujhse kuch bhi kholne ya karne ko keh sakte hain!";
         }
-        if (lower.includes('time') || lower.includes('date')) {
-            const now = new Date();
-            return `Abhi samay ho raha hai ${now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} aur date hai ${now.toLocaleDateString()}.`;
-        }
-        return `Aapne kaha: "${msg}". Main taiyar hu master!`;
+        return `Ji master! Aapne kaha: "${msg}". Main taiyar hu!`;
     }
 
     function appendMessage(sender, text) {
@@ -303,7 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
             msgDiv.innerHTML = `
                 <div class="msg-avatar"><img src="anime_avatar.jpg" alt="Kai"></div>
                 <div class="msg-content">
-                    <span class="sender-name">KAI (AI Companion)</span>
+                    <span class="sender-name">KAI (AI Assistant)</span>
                     <p>${text}</p>
                 </div>
             `;
